@@ -84,6 +84,64 @@ officecli get contract.docx /
 → результат: report.xlsx готов
 ```
 
+## PDF-инструментарий: Stirling-PDF
+
+Для работы с PDF в Vector Office используется [Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF) — self-hosted PDF-комбайн (40+ операций):
+
+| Операция | Для чего |
+|----------|----------|
+| Объединить | Слияние договоров, актов, приложений в один документ |
+| Разделить | Разбивка многостраничного PDF на отдельные файлы |
+| Сжать | Уменьшение PDF для отправки по email (лучше чем iLovePDF) |
+| Конвертировать | PDF → Word/Excel/PPTX и обратно |
+| OCR | Распознавание сканов, факсов, фото документов |
+| Водяной знак | Добавление грифов, пометок «копия», «черновик» |
+| Подпись / штамп | Цифровая подпись, штампы «утверждено» |
+| Сравнить | Diff двух PDF (договор v1 vs v2) |
+| Санитизация | Удаление метаданных, скрытых слоёв перед отправкой |
+| Редактор текста | Прямое редактирование текста в PDF |
+
+### Установка
+
+```bash
+docker run -d --name stirling-pdf -p 8080:8080 \
+  -v ~/stirling-pdf/data:/usr/share/tessdata \
+  -v ~/stirling-pdf/configs:/configs \
+  -v ~/stirling-pdf/logs:/logs \
+  -e DOCKER_ENABLE_SECURITY=false \
+  frooodle/s-pdf:latest
+```
+
+API доступен на `http://localhost:8080`. Все файлы обрабатываются локально.
+
+### Интеграция с агентами
+
+```
+Агент: "Сожми договор и добавь водяной знак 'Копия'"
+→ terminal: curl -X POST http://localhost:8080/api/v1/compress ...
+→ terminal: curl -X POST http://localhost:8080/api/v1/add-watermark ...
+→ результат: PDF обработан локально
+```
+
+## docker-compose
+
+```yaml
+# ~/projects/vector-office/docker-compose.yml
+services:
+  stirling-pdf:
+    image: frooodle/s-pdf:latest
+    container_name: stirling-pdf
+    ports:
+      - "8080:8080"
+    volumes:
+      - ~/stirling-pdf/data:/usr/share/tessdata
+      - ~/stirling-pdf/configs:/configs
+      - ~/stirling-pdf/logs:/logs
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      - SECURITY_ENABLE_LOGIN=false
+```
+
 ## Источник
 
-На базе [OfficeCLI](https://github.com/iOfficeAI/OfficeCLI) v1.0.102 — Apache 2.0, 5.4K+ звёзд.
+На базе [OfficeCLI](https://github.com/iOfficeAI/OfficeCLI) v1.0.102 — Apache 2.0, 5.4K+ звёзд. PDF — [Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF) — GPL v3, 50K+ звёзд.
